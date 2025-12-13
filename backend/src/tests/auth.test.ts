@@ -27,4 +27,18 @@ describe('Auth Endpoints', () => {
     expect(res.body).toHaveProperty('message', 'User registered successfully');
     expect(res.body).toHaveProperty('userId');
   });
+  it('POST /api/auth/login should return a JWT token', async () => {
+    await request(app).post('/api/auth/register').send({
+      email: 'login@example.com',
+      password: 'password123'
+    });
+
+    const res = await request(app).post('/api/auth/login').send({
+      email: 'login@example.com',
+      password: 'password123'
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('token');
+  });
 });
