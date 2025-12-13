@@ -24,18 +24,21 @@ describe('Sweet Endpoints', () => {
 
     const token = loginRes.body.token;
 
+    
     const res = await request(app)
       .post('/api/sweets')
-      .set('Authorization', `Bearer ${token}`) 
+      .set('Authorization', `Bearer ${token}`)
       .send({
-        name: 'Chocolate Lava Cake',
-        price: 5.99,
-        description: 'Gooey chocolate goodness',
-        imageUrl: 'http://example.com/cake.jpg'
+        name: 'Gulab Jamun',
+        price: 15.00,
+        category: 'Syrup Based',
+        quantity: 100
       });
 
     expect(res.status).toBe(201);
-    expect(res.body.name).toBe('Chocolate Lava Cake');
+    expect(res.body.name).toBe('Gulab Jamun');
+    expect(res.body.category).toBe('Syrup Based');
     expect(res.body).toHaveProperty('id');
+    expect(typeof res.body.id).toBe('number'); 
   });
 });
