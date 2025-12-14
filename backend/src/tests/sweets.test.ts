@@ -62,4 +62,37 @@ describe('Sweet Endpoints', () => {
     expect(rasgulla).toBeDefined();
     expect(rasgulla).toHaveProperty('price', 12.00);
   });
+
+  it('PATCH /api/sweets/:id should update an existing sweet', async () => {
+    const userRes = await request(app).post('/api/auth/register').send({
+      email: 'manager@example.com',
+      password: 'password123'
+    });
+    
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'manager@example.com',
+      password: 'password123'
+    });
+    const token = loginRes.body.token;
+
+    const sweet = await prisma.sweet.create({
+      data: {
+        name: 'Kaju Katli',
+        price: 20.00,
+        category: 'Dry Fruit',
+        quantity: 50
+      }
+    });
+
+    const res = await request(app)
+      .patch(`/api/sweets/${sweet.id}`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({
+        price: 25.00
+      });
+
+    expect(res.status).toBe(200);
+    expect(res.body.price).toBe(25.00);
+    expect(res.body.name).toBe('Kaju Katli');
+  });
 });
