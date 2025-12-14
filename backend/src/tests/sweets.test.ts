@@ -42,7 +42,8 @@ describe('Sweet Endpoints', () => {
     expect(typeof res.body.id).toBe('number'); 
   });
   it('GET /api/sweets should return a list of sweets', async () => {
-    // 1. Arrange: seed the database directly
+    await prisma.sweet.deleteMany(); 
+    
     await prisma.sweet.create({
       data: {
         name: 'Rasgulla',
@@ -52,13 +53,13 @@ describe('Sweet Endpoints', () => {
       }
     });
 
-    // 2. Act: Fetch the list (No token needed, it's public)
     const res = await request(app).get('/api/sweets');
 
-    // 3. Assert
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
     expect(res.body.length).toBeGreaterThan(0);
-    expect(res.body[0]).toHaveProperty('name', 'Rasgulla');
+    
+    const rasgulla = res.body.find((s: any) => s.name === 'Rasgulla');
+    expect(rasgulla).toBeDefined();
+    expect(rasgulla).toHaveProperty('price', 12.00);
   });
 });
