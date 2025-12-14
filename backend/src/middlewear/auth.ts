@@ -1,24 +1,32 @@
 import { Request, Response, NextFunction } from 'express';
-import jwt from 'jsonwebtoken';
+import jwt, {JwtPayload} from 'jsonwebtoken';
 
 export interface AuthRequest extends Request {
   user?: { userId: string; role: string };
 }
 
 export const authenticateToken = (req: Request, res: Response, next: NextFunction) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-
-  if (!token) {
-    return res.status(401).json({ message: 'Access denied' });
-  }
-
   try {
-    const verified = jwt.verify(token, process.env.JWT_SECRET || 'supersecretkey');
-    (req as AuthRequest).user = verified as { userId: string; role: string };
+    const authHeader = req.header('Authorization');
+    console.log('1. Auth Header Received:', authHeader); 
+
+    if (!authHeader) {
+      throw new Error('No header provided');
+    }
+
+    const token = authHeader.replace('Bearer ', '');
+    const secret = process.env.JWT_SECRET || 'supersecret';
+
+    const decoded = jwt.verify(token, secret);
+    console.log('4. Token Decoded Successfully:', decoded);
+
+    // FIX: Force TypeScript to treat 'decoded' as our specific object type
+    (req as AuthRequest).user = decoded as { userId: string; role: string }; 
+    
     next();
   } catch (error) {
-    res.status(403).json({ message: 'Invalid token' });
+    console.error('!!! AUTH ERROR !!!', error);
+    res.status(401).send({ message: 'Invalid token' });
   }
 };
 
