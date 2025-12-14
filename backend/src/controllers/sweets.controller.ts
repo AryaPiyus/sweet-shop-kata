@@ -29,3 +29,24 @@ export const listSweets: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Error fetching sweets' });
   }
 };
+
+export const updateSweet: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, price, category, quantity } = req.body;
+
+    const sweet = await prisma.sweet.update({
+      where: { id: Number(id) },
+      data: {
+        name,
+        price,
+        category,
+        quantity
+      }
+    });
+
+    res.status(200).json(sweet);
+  } catch (error) {
+    res.status(500).json({ message: 'Error updating sweet' });
+  }
+};
