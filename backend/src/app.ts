@@ -7,7 +7,7 @@ const app = express();
 
 app.use(helmet());
 app.use(cors({
-  origin:  "https://sweet-shop-kata-eta.vercel.app/" , 
+  origin:  "https://sweet-shop-kata-eta.vercel.app" , 
   credentials: true 
 }));
 app.use(express.json());
