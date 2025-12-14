@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext'; 
 import ProductCard from '../components/ProductCard';
+import CartDrawer from '../components/CartDrawer'; 
 
 interface Sweet {
   id: number;
@@ -14,18 +16,23 @@ interface Sweet {
 
 export default function Dashboard() {
   const { logout, user, isAuthenticated, isAdmin } = useAuth();
+  const { addToCart, cartCount } = useCart(); // <--- Get Cart Actions
   const navigate = useNavigate();
   
+  // Data States
   const [sweets, setSweets] = useState<Sweet[]>([]);
   const [loading, setLoading] = useState(true);
+  
+  // UI States
   const [actionId, setActionId] = useState<number | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isCartOpen, setIsCartOpen] = useState(false); // <--- Cart Drawer State
   
-  // Creation State
+  // Admin: Creation State
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [newSweet, setNewSweet] = useState({ name: '', price: '', category: '', quantity: '' });
 
-  // Edit State (NEW)
+  // Admin: Edit State
   const [editingSweet, setEditingSweet] = useState<Sweet | null>(null);
 
   useEffect(() => {
@@ -43,21 +50,28 @@ export default function Dashboard() {
     }
   };
 
-  // --- ACTIONS ---
-  const handleBuy = async (id: number) => {
+  // --- CUSTOMER ACTION: ADD TO CART ---
+  const handleBuy = (id: number) => {
     if (!isAuthenticated) return navigate('/login');
-    setActionId(id);
-    try {
-      const res = await api.post(`/sweets/${id}/purchase`, { amount: 1 });
-      updateStockLocally(id, res.data.quantity);
-      alert('Yum! Purchase successful.');
-    } catch (error: any) {
-      alert(error.response?.data?.message || 'Purchase failed');
-    } finally {
-      setActionId(null);
-    }
+    
+    // Find the full sweet object based on ID
+    const sweet = sweets.find(s => s.id === id);
+    if (!sweet) return;
+
+    // Add to Global Cart Context
+    addToCart({
+      id: sweet.id,
+      name: sweet.name,
+      price: parseFloat(sweet.price),
+      quantity: 1,
+      maxStock: sweet.quantity
+    });
+    
+    // Optional: Open drawer automatically
+    // setIsCartOpen(true); 
   };
 
+  // --- ADMIN ACTIONS ---
   const handleRestock = async (id: number, amount: number) => {
     if (amount <= 0) return alert("Please enter a valid amount");
     setActionId(id);
@@ -104,13 +118,11 @@ export default function Dashboard() {
     }
   };
 
-  // NEW: Update Action (PATCH)
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingSweet) return;
 
     try {
-      // Send only the fields needed. Prisma handles partial updates fine.
       const payload = {
         name: editingSweet.name,
         price: parseFloat(editingSweet.price),
@@ -119,9 +131,8 @@ export default function Dashboard() {
 
       const res = await api.patch(`/sweets/${editingSweet.id}`, payload);
       
-      // Update local list
       setSweets(current => current.map(s => s.id === editingSweet.id ? { ...s, ...res.data } : s));
-      setEditingSweet(null); // Close modal
+      setEditingSweet(null);
       alert('Sweet updated successfully!');
     } catch (error: any) {
       alert('Update failed: ' + error.response?.data?.message);
@@ -133,29 +144,51 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-20 relative">
-      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center relative z-20">
-        <h1 className="text-2xl font-bold text-blue-600 tracking-tight">🍬 Sweet Shop</h1>
-        <div className="relative">
-          <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 font-medium text-gray-700 hover:text-blue-600">
-            {user ? user.role.toUpperCase() : 'Account'}
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
-          </button>
-          {isMenuOpen && (
-            <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1">
-              {isAuthenticated ? (
-                <button onClick={() => { logout(); setIsMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm">Logout</button>
-              ) : (
-                <>
-                  <Link to="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Login</Link>
-                  <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Register</Link>
-                </>
+    <div className="min-h-screen bg-stone-50 pb-20 relative">
+      {/* --- NAVBAR --- */}
+      <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center sticky top-0 z-30">
+        <h1 className="text-2xl font-bold text-blue-600 tracking-tight cursor-pointer" onClick={() => navigate('/')}>🍬 Sweet Shop</h1>
+        
+        <div className="flex items-center">
+          {/* CART ICON (Only for Customers/Guests) */}
+          {!isAdmin && (
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="relative mr-6 p-2 text-gray-600 hover:text-blue-600 transition-transform active:scale-95"
+            >
+              <svg className="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+              
+              {cartCount > 0 && (
+                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs font-bold w-5 h-5 flex items-center justify-center rounded-full shadow-sm animate-bounce">
+                  {cartCount}
+                </span>
               )}
-            </div>
+            </button>
           )}
+
+          {/* ACCOUNT DROPDOWN */}
+          <div className="relative">
+            <button onClick={() => setIsMenuOpen(!isMenuOpen)} className="flex items-center gap-2 font-medium text-gray-700 hover:text-blue-600">
+              {user ? user.role.toUpperCase() : 'Account'}
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path></svg>
+            </button>
+            {isMenuOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg border border-gray-100 py-1 animate-in fade-in slide-in-from-top-2">
+                {isAuthenticated ? (
+                  <button onClick={() => { logout(); setIsMenuOpen(false); }} className="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 text-sm">Logout</button>
+                ) : (
+                  <>
+                    <Link to="/login" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Login</Link>
+                    <Link to="/register" className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Register</Link>
+                  </>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
+      {/* --- MAIN CONTENT --- */}
       <main className="p-6 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-8">
           <div>
@@ -206,7 +239,7 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* --- MODAL 2: EDIT FORM (NEW) --- */}
+        {/* --- MODAL 2: EDIT FORM --- */}
         {editingSweet && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 backdrop-blur-sm">
             <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md transform transition-all border-t-4 border-blue-500">
@@ -237,6 +270,7 @@ export default function Dashboard() {
           </div>
         )}
 
+        {/* --- PRODUCT GRID --- */}
         {loading ? (
           <div className="text-center mt-20 text-gray-400 animate-pulse">Loading sweets...</div>
         ) : sweets.length === 0 ? (
@@ -252,14 +286,16 @@ export default function Dashboard() {
                 sweet={sweet}
                 isAdmin={!!isAdmin}
                 loading={actionId === sweet.id}
-                onAction={isAdmin ? handleDelete : handleBuy}
+                onAction={isAdmin ? handleDelete : handleBuy} // Admin = Delete, Customer = AddToCart
                 onRestock={handleRestock}
-                onEdit={setEditingSweet} // <--- Pass the setter
+                onEdit={setEditingSweet}
               />
             ))}
           </div>
         )}
       </main>
+
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   );
 }
