@@ -1,7 +1,7 @@
 import request from 'supertest';
 import app from '../app';
 import { cleanDb } from './setup';
-
+import prisma from '../db/client';
 describe('Sweet Endpoints', () => {
   beforeAll(async () => {
     await cleanDb();
@@ -40,5 +40,25 @@ describe('Sweet Endpoints', () => {
     expect(res.body.category).toBe('Syrup Based');
     expect(res.body).toHaveProperty('id');
     expect(typeof res.body.id).toBe('number'); 
+  });
+  it('GET /api/sweets should return a list of sweets', async () => {
+    // 1. Arrange: seed the database directly
+    await prisma.sweet.create({
+      data: {
+        name: 'Rasgulla',
+        price: 12.00,
+        category: 'Syrup Based',
+        quantity: 50
+      }
+    });
+
+    // 2. Act: Fetch the list (No token needed, it's public)
+    const res = await request(app).get('/api/sweets');
+
+    // 3. Assert
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body)).toBe(true);
+    expect(res.body.length).toBeGreaterThan(0);
+    expect(res.body[0]).toHaveProperty('name', 'Rasgulla');
   });
 });
