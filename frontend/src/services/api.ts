@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'https://sweet-shop-kata-vxyz.onrender.com', 
+  baseURL: 'https://sweet-shop-kata-vxyz.onrender.com/api', 
   headers: {
     'Content-Type': 'application/json',
   },
