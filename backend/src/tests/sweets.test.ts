@@ -121,4 +121,41 @@ describe('Sweet Endpoints', () => {
     const checkDb = await prisma.sweet.findUnique({ where: { id: sweet.id } });
     expect(checkDb).toBeNull();
   });
+
+  it('POST /api/sweets/:id/restock should strictly be ADMIN only', async () => {
+    const sweet = await prisma.sweet.create({
+      data: { name: 'Admin Barfi', price: 10, category: 'Milk', quantity: 10 }
+    });
+
+    await request(app).post('/api/auth/register').send({ 
+        email: 'normie@test.com', 
+        password: '123' 
+    });
+    const normieLogin = await request(app).post('/api/auth/login').send({ email: 'normie@test.com', password: '123' });
+    const normieToken = normieLogin.body.token;
+
+    const failRes = await request(app)
+      .post(`/api/sweets/${sweet.id}/restock`)
+      .set('Authorization', `Bearer ${normieToken}`)
+      .send({ amount: 50 });
+
+    expect(failRes.status).toBe(403); 
+
+    await request(app).post('/api/auth/register').send({ 
+        email: 'boss@test.com', 
+        password: '123',
+        role: 'admin' 
+    });
+    
+    const adminLogin = await request(app).post('/api/auth/login').send({ email: 'boss@test.com', password: '123' });
+    const adminToken = adminLogin.body.token;
+
+    const successRes = await request(app)
+        .post(`/api/sweets/${sweet.id}/restock`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({ amount: 50 });
+
+    expect(successRes.status).toBe(200);
+    expect(successRes.body.quantity).toBe(60); // 10 + 50
+  });
 });
