@@ -158,4 +158,30 @@ describe('Sweet Endpoints', () => {
     expect(successRes.status).toBe(200);
     expect(successRes.body.quantity).toBe(60); // 10 + 50
   });
+
+  it('POST /api/sweets/:id/purchase should handle purchases correctly', async () => {
+    const sweet = await prisma.sweet.create({
+      data: { name: 'Laddoo', price: 5, category: 'Ghee', quantity: 10 }
+    });
+
+    await request(app).post('/api/auth/register').send({ email: 'buyer@test.com', password: '123' });
+    const loginRes = await request(app).post('/api/auth/login').send({ email: 'buyer@test.com', password: '123' });
+    const token = loginRes.body.token;
+
+    const successRes = await request(app)
+      .post(`/api/sweets/${sweet.id}/purchase`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 5 });
+
+    expect(successRes.status).toBe(200);
+    expect(successRes.body.quantity).toBe(5); 
+
+    const failRes = await request(app)
+      .post(`/api/sweets/${sweet.id}/purchase`)
+      .set('Authorization', `Bearer ${token}`)
+      .send({ amount: 6 });
+
+    expect(failRes.status).toBe(400); 
+    expect(failRes.body.message).toMatch(/insufficient/i);
+  });
 });
