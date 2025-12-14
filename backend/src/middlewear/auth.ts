@@ -21,3 +21,13 @@ export const authenticateToken = (req: Request, res: Response, next: NextFunctio
     res.status(403).json({ message: 'Invalid token' });
   }
 };
+
+export const isAdmin = (req: Request, res: Response, next: NextFunction) => {
+  const user = (req as AuthRequest).user;
+
+  if (!user || user.role !== 'admin') {
+    return res.status(403).json({ message: 'Access denied: Admins only' });
+  }
+
+  next();
+};

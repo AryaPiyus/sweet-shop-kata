@@ -5,7 +5,7 @@ import prisma from "../db/client";
 
 export const register = async (req: Request, res: Response) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, role } = req.body; 
 
         const existingUser = await prisma.user.findUnique({ where: { email } });
 
@@ -19,7 +19,7 @@ export const register = async (req: Request, res: Response) => {
             data: {
                 email,
                 password: hashedPassword,
-                role: "customer"
+                role: role || "customer" 
             }
         });
 

@@ -64,3 +64,21 @@ export const deleteSweet: RequestHandler = async (req, res) => {
     res.status(500).json({ message: 'Error deleting sweet' });
   }
 };
+
+export const restockSweet: RequestHandler = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { amount } = req.body;
+
+    const sweet = await prisma.sweet.update({
+      where: { id: Number(id) },
+      data: {
+        quantity: { increment: Number(amount) }
+      }
+    });
+
+    res.status(200).json(sweet);
+  } catch (error) {
+    res.status(500).json({ message: 'Error restocking sweet' });
+  }
+};
