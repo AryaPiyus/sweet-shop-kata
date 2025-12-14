@@ -95,4 +95,30 @@ describe('Sweet Endpoints', () => {
     expect(res.body.price).toBe(25.00);
     expect(res.body.name).toBe('Kaju Katli');
   });
+
+  it('DELETE /api/sweets/:id should delete a sweet', async () => {
+    const userRes = await request(app).post('/api/auth/register').send({
+      email: 'deleter@example.com',
+      password: 'password123'
+    });
+    
+    const loginRes = await request(app).post('/api/auth/login').send({
+      email: 'deleter@example.com',
+      password: 'password123'
+    });
+    const token = loginRes.body.token;
+
+    const sweet = await prisma.sweet.create({
+      data: { name: 'Barfi', price: 8.00, category: 'Milk Based', quantity: 20 }
+    });
+
+    const res = await request(app)
+      .delete(`/api/sweets/${sweet.id}`)
+      .set('Authorization', `Bearer ${token}`);
+
+    expect(res.status).toBe(204);
+
+    const checkDb = await prisma.sweet.findUnique({ where: { id: sweet.id } });
+    expect(checkDb).toBeNull();
+  });
 });
