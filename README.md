@@ -64,51 +64,118 @@ Co-Author Credit:
 
 Co-authored-by: Gemini gemini@google.com
 
-## ⚙️ Local Setup Instructions
+## ⚙️ Local Setup
 
 Follow these steps to run the project locally.
 
-### Prerequisites
-* Node.js (v18 or higher)
-* PostgreSQL installed locally
+---
 
-### 1. Clone the Repository
-```bash
-git clone <https://github.com/AryaPiyus/sweet-shop-kata>
+## 📦 Prerequisites
+
+- Node.js v18 or higher
+- PostgreSQL installed and running locally
+
+---
+
+## 📥 1. Clone the Repository
+
+git clone https://github.com/AryaPiyus/sweet-shop-kata  
 cd sweet-shop-kata
-### 2. Backend Setup
-Navigate to the backend folder and install dependencies:
+
+---
+
+## 🧠 2. Backend Setup
+
+### 2.1 Navigate to Backend Directory
+
 cd backend
+
+---
+
+### 2.2 Install Dependencies
+
 npm install
-### Step 2a: Configure Environment Create a .env file in the backend directory:
 
-Code snippet
+---
 
-PORT=3000
-DATABASE_URL="postgresql://postgres:password@localhost:5432/sweetshop"
+### 2.3 Environment Configuration
+
+Create a `.env` file inside the `backend` directory and add:
+
+PORT=3000  
+DATABASE_URL="postgresql://postgres:password@localhost:5432/sweetshop"  
 JWT_SECRET="your_super_secret_key_here"
-### Step 2b: Setup Images
 
-### Create a folder structure inside backend: public/images.
+Make sure:
+- PostgreSQL is running
+- Database `sweetshop` exists
 
-Add your sweet images (e.g., gulab-jamun.png) into this folder.
+---
 
-### Step 2c: Database Migration Run the migrations to create tables and apply the schema:
+### 2.4 Static Images Setup
+
+Create the following folder structure inside `backend`:
+
+backend/  
+└── public/  
+    └── images/
+
+Add sweet images inside the `images` folder  
+Example: `gulab-jamun.png`, `rasgulla.png`
+
+---
+
+### 2.5 Database Migration
+
+Run Prisma migrations:
+
 npx prisma migrate dev --name init
-npm run dev
-The backend runs on http://localhost:3000
 
-### 3. Frontend Setup
-Open a new terminal, navigate to the frontend folder, and install dependencies:
-cd ../frontend
+---
+
+### 2.6 Start Backend Server
+
+npm run dev
+
+Backend runs at:  
+http://localhost:3000
+
+---
+
+## 🎨 3. Frontend Setup
+
+### 3.1 Navigate to Frontend Directory
+
+Open a new terminal:
+
+cd frontend
+
+---
+
+### 3.2 Install Dependencies
+
 npm install
-Create a .env file in the frontend directory:
 
-# Point to your local backend
+---
+
+### 3.3 Environment Configuration
+
+Create a `.env` file inside the `frontend` directory:
+
 VITE_API_URL="http://localhost:3000/api"
-Start the React application:
 
-Bash
+---
+
+### 3.4 Start Frontend Server
 
 npm run dev
-The frontend runs on http://localhost:5173
+
+Frontend runs at:  
+http://localhost:5173
+
+---
+
+## ✅ Application Access
+
+- Backend API → http://localhost:3000  
+- Frontend UI → http://localhost:5173
