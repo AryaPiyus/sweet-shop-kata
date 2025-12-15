@@ -76,44 +76,33 @@ Follow these steps to run the project locally.
 ```bash
 git clone <https://github.com/AryaPiyus/sweet-shop-kata>
 cd sweet-shop-kata
-2. Backend Setup
+### 2. Backend Setup
 Navigate to the backend folder and install dependencies:
-
-Bash
-
 cd backend
 npm install
-Step 2a: Configure Environment Create a .env file in the backend directory:
+### Step 2a: Configure Environment Create a .env file in the backend directory:
 
 Code snippet
 
 PORT=3000
 DATABASE_URL="postgresql://postgres:password@localhost:5432/sweetshop"
 JWT_SECRET="your_super_secret_key_here"
-Step 2b: Setup Images
+### Step 2b: Setup Images
 
-Create a folder structure inside backend: public/images.
+### Create a folder structure inside backend: public/images.
 
 Add your sweet images (e.g., gulab-jamun.png) into this folder.
 
-Step 2c: Database Migration Run the migrations to create tables and apply the schema:
-
-Bash
-
+### Step 2c: Database Migration Run the migrations to create tables and apply the schema:
 npx prisma migrate dev --name init
 npm run dev
 The backend runs on http://localhost:3000
 
-3. Frontend Setup
+### 3. Frontend Setup
 Open a new terminal, navigate to the frontend folder, and install dependencies:
-
-Bash
-
 cd ../frontend
 npm install
 Create a .env file in the frontend directory:
-
-Code snippet
 
 # Point to your local backend
 VITE_API_URL="http://localhost:3000/api"
